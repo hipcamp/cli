@@ -20,6 +20,10 @@ const (
 	DefaultKeyFile = "key.pem"
 	// DefaultCertFile is the default filename for the cert pem file
 	DefaultCertFile = "cert.pem"
+	// DefaultClientRetries is the default number of times the client should retry
+	DefaultClientRetries = 1
+	// FlagClientRetries is the flag name for the number of retries the client should perform
+	FlagClientRetries = "retries"
 	// FlagTLSVerify is the flag name for the TLS verification option
 	FlagTLSVerify = "tlsverify"
 	// FormatHelp describes the --format flag behavior for list commands
@@ -37,21 +41,23 @@ Refer to https://docs.docker.com/go/formatting/ for more information about forma
 )
 
 var (
-	dockerCertPath  = os.Getenv(client.EnvOverrideCertPath)
-	dockerTLSVerify = os.Getenv(client.EnvTLSVerify) != ""
+	dockerCertPath      = os.Getenv(client.EnvOverrideCertPath)
+	dockerTLSVerify     = os.Getenv(client.EnvTLSVerify) != ""
+	dockerClientRetries = os.Getenv("DOCKER_CLIENT_RETRIES")
 	// TODO(thaJeztah) the 'DOCKER_TLS' environment variable is not documented, and does not have a const.
 	dockerTLS = os.Getenv("DOCKER_TLS") != ""
 )
 
 // CommonOptions are options common to both the client and the daemon.
 type CommonOptions struct {
-	Debug      bool
-	Hosts      []string
-	LogLevel   string
-	TLS        bool
-	TLSVerify  bool
-	TLSOptions *tlsconfig.Options
-	Context    string
+	Debug         bool
+	Hosts         []string
+	LogLevel      string
+	ClientRetries int
+	TLS           bool
+	TLSVerify     bool
+	TLSOptions    *tlsconfig.Options
+	Context       string
 }
 
 // NewCommonOptions returns a new CommonOptions
@@ -67,6 +73,7 @@ func (commonOpts *CommonOptions) InstallFlags(flags *pflag.FlagSet) {
 
 	flags.BoolVarP(&commonOpts.Debug, "debug", "D", false, "Enable debug mode")
 	flags.StringVarP(&commonOpts.LogLevel, "log-level", "l", "info", `Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")`)
+	flags.IntVar(&commonOpts.ClientRetries, FlagClientRetries, dockerClientRetries, fmt.Sprintf("How many times the client should retry (default %d)", DefaultClientRetries))
 	flags.BoolVar(&commonOpts.TLS, "tls", dockerTLS, "Use TLS; implied by --tlsverify")
 	flags.BoolVar(&commonOpts.TLSVerify, FlagTLSVerify, dockerTLSVerify, "Use TLS and verify the remote")
 
@@ -92,6 +99,11 @@ func (commonOpts *CommonOptions) InstallFlags(flags *pflag.FlagSet) {
 // SetDefaultOptions sets default values for options after flag parsing is
 // complete
 func (commonOpts *CommonOptions) SetDefaultOptions(flags *pflag.FlagSet) {
+	// If the user did not set the retries flag, set it to its default value.
+	if !flags.Changed("retries") {
+		commonOpts.ClientRetries = DefaultClientRetries
+	}
+
 	// Regardless of whether the user sets it to true or false, if they
 	// specify --tlsverify at all then we need to turn on TLS
 	// TLSVerify can be true even if not set due to DOCKER_TLS_VERIFY env var, so we need

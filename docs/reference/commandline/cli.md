@@ -38,6 +38,7 @@ Options:
       --help               Print usage
   -H, --host value         Daemon socket(s) to connect to (default [])
   -l, --log-level string   Set the logging level ("debug"|"info"|"warn"|"error"|"fatal") (default "info")
+      --retries int        How many times the client should retry (default 1)
       --tls                Use TLS; implied by --tlsverify
       --tlscacert string   Trust certs signed only by this CA (default "/root/.docker/ca.pem")
       --tlscert string     Path to TLS certificate file (default "/root/.docker/cert.pem")
@@ -76,6 +77,7 @@ line:
 | `DOCKER_DEFAULT_PLATFORM`     | Default platform for commands that take the `--platform` flag.                                                                          |
 | `DOCKER_HIDE_LEGACY_COMMANDS` | When set, Docker hides "legacy" top-level commands (such as `docker rm`, and `docker pull`) in `docker help` output, and only `Management commands` per object-type (e.g., `docker container`) are printed. This may become the default in a future release, at which point this environment-variable is removed. |
 | `DOCKER_HOST`                 | Daemon socket to connect to.                                                                                                            |
+| `DOCKER_CLIENT_RETRIES`       | How many times the client should retry (default 1).
 | `DOCKER_TLS_VERIFY`           | When set Docker uses TLS and verifies the remote. This variable is used both by the `docker` CLI and the [`dockerd` daemon](dockerd.md) |
 | `BUILDKIT_PROGRESS`           | Set type of progress output (`auto`, `plain`, `tty`) when [building](build.md) with [BuildKit backend](../builder.md#buildkit). Use plain to show container output (default `auto`). |
 
